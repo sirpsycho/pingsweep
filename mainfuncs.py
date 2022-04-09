@@ -3,7 +3,11 @@ import itertools
 import socket
 import subprocess
 import os
-
+try:
+	from netaddr import IPNetwork
+except:
+	print("\033[1m\033[91m[!]\033[0m Error: netaddr package not found. 'pip install netaddr' to use CIDR notation")
+	
 def print_err(desc):
 	print("\033[1m\033[91m[!]\033[0m Error: %s" % desc)
 	print("Use '-h' option for help menu")
