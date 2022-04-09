@@ -8,122 +8,13 @@ import subprocess
 import os
 import socket
 import itertools
+import mainfuncs
 try:
 	from netaddr import IPNetwork
 except:
 	print("\033[1m\033[91m[!]\033[0m Error: netaddr package not found. 'pip install netaddr' to use CIDR notation")
 
 def main():
-
-	## Define functions
-
-	def print_err(desc):
-		print("\033[1m\033[91m[!]\033[0m Error: %s" % desc)
-		print("Use '-h' option for help menu")
-		sys.exit()
-
-	def check_requirements():
-		try:
-			FNULL = open(os.devnull, 'w')
-			subprocess.call(["fping", "-v"], stdout=FNULL, stderr=subprocess.STDOUT)
-		except OSError as e:
-			if e.errno == os.errno.ENOENT:
-				print_err("fping is not installed. Please install fping and run again. Exiting...")
-			else:
-				raise
-				sys.exit()
-
-	def is_int(rawvar):
-		try:
-			int(rawvar)
-			return True
-		except ValueError:
-			return False
-
-	def validate_ip(ip):
-		a = ip.split('.')
-		if len(a) != 4:
-			return False
-		for x in a:
-			if not x.isdigit():
-				return False
-			i = int(x)
-			if i < 0 or i > 255:
-				return False
-		return True
-
-	def createiplist_cidr(ipstring):
-		iplist = []
-		try:
-			for ip in IPNetwork(ipstring):
-				iplist.append(ip)
-		except:
-			print_err("invalid CIDR notation")
-		return iplist
-
-	def createiplist_dash(input_string):
-		iplist = []
-		try:
-			octets = input_string.split('.')
-			chunks = [map(int, octet.split('-')) for octet in octets]
-			ranges = [range(c[0], c[1] + 1) if len(c) == 2 else c for c in chunks]
-
-			for address in itertools.product(*ranges):
-				iplist.append('.'.join(map(str, address)))
-		except:
-			print_err("invalid dash notation")
-		return iplist
-
-	def createiplist_range(begip, endip):
-		ip_list = []
-
-		try:
-			start = list(map(int, begip.split(".")))
-			end = list(map(int, endip.split(".")))
-		
-			if begip == endip:
-				if start[3] == 0:
-					end[3] = 255
-		
-			if end[0] > start[0] or (end[0] == start[0] and end[1] > start[1]) or (end[0] == start[0] and end[1] == start[1] and end[2] > start[2]) or (end[0] == start[0] and end[1] == start[1] and end[2] == start[2] and end[3] >= start[3]):
-				temp = start
-
-				ip_list.append(begip)
-				while temp != end:
-					start[3] += 1
-					for i in (3, 2, 1):
-						if temp[i] == 256:
-							temp[i] = 0
-							temp[i-1] += 1
-					ip_list.append(".".join(map(str, temp)))
-
-				return ip_list
-			else:
-				print_err("The second IP must be greater than or equal to the first IP.")
-		except:
-			print_err("invalid range notation")
-
-	def are_you_sure(numOfHosts):
-		valid = {"yes": True, "y": True, "ye": True,
-			"no": False, "n": False}
-
-		while True:
-			sys.stdout.write("Ping %s hosts? [Y/n] " % numOfHosts)
-			choice = raw_input().lower()
-			if choice == '':
-				return valid["yes"]
-			elif choice in valid:
-				return valid[choice]
-			else:
-				sys.stdout.write("Please respond with 'yes' or 'no' "
-						"(or 'y' or 'n').\n")
-
-	def resolve(ip):
-		try:
-			hostname = socket.gethostbyaddr(ip)[0]
-			return hostname
-		except:
-			return ''
 
 
 	## Get Options
@@ -180,10 +71,10 @@ Examples:
 	verbose = options.verbose
 	reverse = options.reverse
 	timeout = options.timeout
-	if not is_int(timeout):
-		print_err("Invalid timeout '%s' - must be an integer" % timeout)
+	if not mainfuncs.is_int(timeout):
+		mainfuncs.print_err("Invalid timeout '%s' - must be an integer" % timeout)
 	elif int(timeout) < 50:
-		print_err("Invalid timeout '%s' - minimum timeout is 50" % timeout)
+		mainfuncs.print_err("Invalid timeout '%s' - minimum timeout is 50" % timeout)
 	hostnames = options.hostnames
 	debug = options.debug
 	ip_file = options.ip_file
@@ -196,43 +87,43 @@ Examples:
 
 	if len(remainder) == 0:
 		if ip_file == '':
-			print_err("Please define IP range to ping")
+			mainfuncs.print_err("Please define IP range to ping")
 		else:
 			try:
 				with open(ip_file, 'r') as f:
 					for line in f:
 						line = line.rstrip()
 						if not line == "":
-							if validate_ip(line):
+							if mainfuncs.validate_ip(line):
 								ip_list.append(line)
 							else:
-								print_err("Invalid IP list file format -- IP list file must have one valid IPv4 address per line with no leading or trailing spaces.")
+								mainfuncs.print_err("Invalid IP list file format -- IP list file must have one valid IPv4 address per line with no leading or trailing spaces.")
 			except:
-				print_err("invalid file '%s'" % (ip_file))
+				mainfuncs.print_err("invalid file '%s'" % (ip_file))
 	elif len(remainder) == 1:
 
 		ipstring = remainder[0]
 		if "/" in ipstring:
-			ip_list = createiplist_cidr(ipstring)
+			ip_list = mainfuncs.createiplist_cidr(ipstring)
 		elif "-" in ipstring:
-			ip_list = createiplist_dash(ipstring)
+			ip_list = mainfuncs.createiplist_dash(ipstring)
 		else:
-			print_err("invalid IP format")
+			mainfuncs.print_err("invalid IP format")
 
 	elif len(remainder) == 2:
 
 		begip = remainder[0]
 		endip = remainder[1]
-		ip_list = createiplist_range(begip, endip)
+		ip_list = mainfuncs.createiplist_range(begip, endip)
 
 	else:
-		print_err("Invalid number of arguments")
+		mainfuncs.print_err("Invalid number of arguments")
 
 
 	## If hosts list exceeds 256, prompt for confirmation
 
 	if len(ip_list) > 256:
-		if not are_you_sure(len(ip_list)):
+		if not mainfuncs.are_you_sure(len(ip_list)):
 			sys.exit()
 
 	## Print selected options before starting the scan
@@ -258,7 +149,7 @@ Examples:
 
 	## Check if fping is installed
 
-	check_requirements()
+	mainfuncs.check_requirements()
 
 
 
@@ -288,7 +179,7 @@ Examples:
 					if "1/1/0" in output:
 						success += 1
 						if hostnames:
-							hostname = resolve(ip)
+							hostname = mainfuncs.resolve(ip)
 							if verbose:
 								print(output, hostname)
 							else:
