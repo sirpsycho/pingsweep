@@ -1,6 +1,8 @@
 import sys
 import itertools
 import socket
+import subprocess
+import os
 
 def print_err(desc):
 	print("\033[1m\033[91m[!]\033[0m Error: %s" % desc)
