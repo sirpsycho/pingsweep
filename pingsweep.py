@@ -71,10 +71,10 @@ Examples:
 	verbose = options.verbose
 	reverse = options.reverse
 	timeout = options.timeout
-	if not is_int(timeout):
-		print_err("Invalid timeout '%s' - must be an integer" % timeout)
+	if not mainfuncs.is_int(timeout):
+		mainfuncs.print_err("Invalid timeout '%s' - must be an integer" % timeout)
 	elif int(timeout) < 50:
-		print_err("Invalid timeout '%s' - minimum timeout is 50" % timeout)
+		mainfuncs.print_err("Invalid timeout '%s' - minimum timeout is 50" % timeout)
 	hostnames = options.hostnames
 	debug = options.debug
 	ip_file = options.ip_file
@@ -87,43 +87,43 @@ Examples:
 
 	if len(remainder) == 0:
 		if ip_file == '':
-			print_err("Please define IP range to ping")
+			mainfuncs.print_err("Please define IP range to ping")
 		else:
 			try:
 				with open(ip_file, 'r') as f:
 					for line in f:
 						line = line.rstrip()
 						if not line == "":
-							if validate_ip(line):
+							if mainfuncs.validate_ip(line):
 								ip_list.append(line)
 							else:
-								print_err("Invalid IP list file format -- IP list file must have one valid IPv4 address per line with no leading or trailing spaces.")
+								mainfuncs.print_err("Invalid IP list file format -- IP list file must have one valid IPv4 address per line with no leading or trailing spaces.")
 			except:
-				print_err("invalid file '%s'" % (ip_file))
+				mainfuncs.print_err("invalid file '%s'" % (ip_file))
 	elif len(remainder) == 1:
 
 		ipstring = remainder[0]
 		if "/" in ipstring:
-			ip_list = createiplist_cidr(ipstring)
+			ip_list = mainfuncs.createiplist_cidr(ipstring)
 		elif "-" in ipstring:
-			ip_list = createiplist_dash(ipstring)
+			ip_list = mainfuncs.createiplist_dash(ipstring)
 		else:
-			print_err("invalid IP format")
+			mainfuncs.print_err("invalid IP format")
 
 	elif len(remainder) == 2:
 
 		begip = remainder[0]
 		endip = remainder[1]
-		ip_list = createiplist_range(begip, endip)
+		ip_list = mainfuncs.createiplist_range(begip, endip)
 
 	else:
-		print_err("Invalid number of arguments")
+		mainfuncs.print_err("Invalid number of arguments")
 
 
 	## If hosts list exceeds 256, prompt for confirmation
 
 	if len(ip_list) > 256:
-		if not are_you_sure(len(ip_list)):
+		if not mainfuncs.are_you_sure(len(ip_list)):
 			sys.exit()
 
 	## Print selected options before starting the scan
@@ -149,7 +149,7 @@ Examples:
 
 	## Check if fping is installed
 
-	check_requirements()
+	mainfuncs.check_requirements()
 
 
 
@@ -179,7 +179,7 @@ Examples:
 					if "1/1/0" in output:
 						success += 1
 						if hostnames:
-							hostname = resolve(ip)
+							hostname = mainfuncs.resolve(ip)
 							if verbose:
 								print(output, hostname)
 							else:
